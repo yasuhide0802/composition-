@@ -2,7 +2,7 @@ var mcFly = require('../flux/mcFly');
 
 var _count = 0;
 
-function countOne(text) {
+function countOne() {
   _count++;
 }
 
@@ -12,20 +12,8 @@ var CounterStore = mcFly.createStore({
     return _count;
   }
 
-}, function(payload){
-
-  switch(payload.actionType) {
-    case 'COUNT_ONE':
-      countOne();
-    break;
-    default:
-      return true;
-  }
-
-  CounterStore.emitChange();
-
-  return true;
-
 });
+
+CounterStore.addAction('COUNT_ONE', countOne);
 
 module.exports = CounterStore;

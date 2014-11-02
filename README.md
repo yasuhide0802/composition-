@@ -11,7 +11,7 @@ McFly is a library that provides all 3 components of Flux architecture, using Fa
 
 Check out this JSFiddle Demo to see how McFly can work for you:
 
-[http://jsfiddle.net/6rauuetb/](http://jsfiddle.net/6rauuetb/)
+[http://jsfiddle.net/6rauuetb/](http://jsfiddle.net/6rauuetb/) <-- NOT up to date
 
 ###Dispatcher
 
@@ -33,8 +33,8 @@ Creating a store with McFly looks like this:
 
 	var _todos = [];
 
-	function addTodo(text) {
-	  _todos.push(text);
+	function addTodo(payload) {
+	  _todos.push(payload.text);
 	}
 
 	var TodoStore = mcFly.createStore({
@@ -43,21 +43,11 @@ Creating a store with McFly looks like this:
 	    return _todos;
 	  }
 
-	}, function(payload){
-
-	  switch(payload.actionType) {
-	    case 'ADD_TODO':
-	      addTodo(payload.text);
-	    break;
-	    default:
-	      return true;
-	  }
-
-	  TodoStore();
-
-	  return true;
-
 	});
+
+We can add an action doing like this:
+
+	TodoStore.addAction('ADD_TODO', addTodo);
 
 Stores are also created a with a ReactJS component mixin that adds and removes store listeners that call an **onChange** component method.
 
@@ -110,3 +100,9 @@ Adding actions to your app looks like this:
      * @param {object} actions - Object with methods to create actions with
      * @constructor
 	  */
+
+### store.addAction
+	/**
+	 * @param {string} type - Unique constant that represent the action
+	 * @param {function} callback - Callback method for this action
+	 */

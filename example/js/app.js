@@ -1,4 +1,4 @@
-var React = require('react');
+window.React = require('react');
 var FluxCounterApp = require('./components/FluxCounterApp.react');
 
 React.render(
