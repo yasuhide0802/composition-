@@ -125,6 +125,9 @@ var EventEmitter = require('events').EventEmitter;
 var Dispatcher = require('./Dispatcher');
 var _ = require('underscore');
 
+var CHANGE_EVENT = 'change';
+_actions = [];
+
 /**
  * Store class
  */
@@ -135,12 +138,13 @@ var _ = require('underscore');
    * methods parameter,  and creates a mixin property for use in components.
    *
    * @param {object} methods - Public methods for Store instance
-   * @param {function} callback - Callback method for Dispatcher dispatches
    * @constructor
    */
-  function Store(methods, callback) {"use strict";
+  function Store(methods) {"use strict";
     var self = this;
-    this.callback = callback;
+    this.callback = function(payload){
+      this.emitChange(payload)
+    }.bind(this)
     _.extend(this, EventEmitter.prototype);
     _.extend(this, methods);
     this.mixin = {
@@ -154,19 +158,12 @@ var _ = require('underscore');
   }
 
   /**
-   * Emits change event
-   */
-  Store.prototype.emitChange=function() {"use strict";
-    this.emit('change');
-  };
-
-  /**
    * Adds a change listener
    *
    * @param {function} callback - Callback method for change event
    */
   Store.prototype.addChangeListener=function(callback) {"use strict";
-    this.on('change', callback);
+    this.on(CHANGE_EVENT, callback);
   };
 
   /**
@@ -175,7 +172,34 @@ var _ = require('underscore');
    * @param {function} callback - Callback method for change event
    */
   Store.prototype.removeChangeListener=function(callback) {"use strict";
-    this.removeListener('change', callback);
+    this.removeListener(CHANGE_EVENT, callback);
+  };
+
+  /**
+   * Register an action
+   *
+   * @param {string} type - Unique constant that represent the action
+   * @param {function} callback - Callback method this action
+   */
+  Store.prototype.addAction=function(type, callback){"use strict";
+    _actions[type] = callback;
+  };
+
+  /**
+   * Callback triggered by a Dispatcher
+   *
+   * @param {object} payload - Data argument for callback method
+   */
+  Store.prototype.emitChange=function(payload) {"use strict";
+
+    var callback = _actions[payload.actionType];
+
+    if(callback){
+      callback(payload);
+      this.emit(CHANGE_EVENT);
+      return true;
+    }
+    return true;
   };
 
 
