@@ -1,6 +1,6 @@
 {
   "name": "mcfly",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Flux architecture made easy",
   "keywords": [
     "flux",
@@ -27,7 +27,7 @@
     "gulp": "^3.8.6",
     "gulp-react": "^0.5.0",
     "gulp-replace": "^0.4.0",
-    "underscore": "^1.7.0",
+    "object-assign": "^1.0.0",
     "vinyl-source-stream": "^0.1.1"
   }
 }

@@ -1,6 +1,6 @@
 var EventEmitter = require('events').EventEmitter;
 var Dispatcher = require('./Dispatcher');
-var _ = require('underscore');
+var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 _actions = [];
@@ -22,8 +22,7 @@ class Store {
     this.callback = function(payload){
       this.emitChange(payload)
     }.bind(this)
-    _.extend(this, EventEmitter.prototype);
-    _.extend(this, methods);
+    assign(this, EventEmitter.prototype, methods);
     this.mixin = {
       componentDidMount: function() {
         self.addChangeListener(this.onChange);
