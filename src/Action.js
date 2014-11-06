@@ -22,7 +22,9 @@ class Action {
    * @constructor
    */
   dispatch(payload) {
-    Dispatcher.dispatch(this.callback(payload));
+    if (payload) {
+      Dispatcher.dispatch(this.callback(payload));
+    }
   }
 }
 
