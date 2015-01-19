@@ -2,6 +2,35 @@ var EventEmitter = require('events').EventEmitter;
 var assign = require('object-assign');
 var invariant = require('invariant');
 
+function createPRSwitchCase(key) {
+  var switchCases = "";
+  switchCases += "case '"+key+"': res = methods['"+key+"'].call(store, payload); break;";
+  return switchCases;
+}
+
+function createPayloadReceiver(store, callback) {
+  if (typeof callback === 'function') {
+    return callback;
+  }
+
+  var i, fnStr, fn;
+
+  fnStr = "return function(payload){ var res;";
+  fnStr += "switch(payload.actionType){";
+
+  for (i in callback) {
+    if (callback.hasOwnProperty(i)) {
+      fnStr += createPRSwitchCase(i);
+    }
+  }
+
+  fnStr += "} return res; }";
+
+  fn = new Function("store,methods", fnStr);
+  
+  return fn(store, callback);
+}
+
 /**
  * Store class
  */
@@ -17,10 +46,10 @@ class Store {
    */
   constructor(methods, callback) {
     var self = this;
-    this.callback = callback;
+    this.callback = createPayloadReceiver(this,callback);
     invariant(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
     invariant(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
-    assign(this, EventEmitter.prototype, methods);
+    assign(this, new EventEmitter(), methods);
     this.mixin = {
       componentDidMount: function() {
         var warn = (console.warn || console.log).bind(console);
@@ -35,7 +64,7 @@ class Store {
       componentWillUnmount: function() {
         self.removeChangeListener(this.storeDidChange || this.onChange);
       }
-    }
+    };
   }
 
   /**

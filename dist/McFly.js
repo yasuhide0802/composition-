@@ -4,10 +4,45 @@ module.exports = require('./lib/McFly');
 var Dispatcher = require('./Dispatcher');
 var Promise = require('es6-promise').Promise;
 
+var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
+function callbackToPromise(func) {
+  var fnStr = func.toString().replace(STRIP_COMMENTS, '');
+  var args = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')'));
+  
+  if ((/^\s*?\$done/i).test(args)) {
+    return function () {
+      var _self = this, _args = Array.prototype.slice.call(arguments);
+      return new Promise(function(resolve, reject){
+        var done = function $done(err, result) {
+          if (err) return reject(err);
+          return resolve(result);
+        };
+
+        _args.unshift(done);
+        func.apply(_self, _args);
+      });
+    };
+  }
+
+  return func;
+}
 
 function reThrow(reject, error) {
   setTimeout(function(){ throw error; }, 0);
   return reject();
+}
+
+function dispatchPayload(payload) {
+  console.log('dispatched!', payload)
+  return new Promise(function(resolve, reject){
+    if (!payload) return reject();
+    if (!payload.actionType) return reThrow(reject,
+      "Payload object requires an actionType property"
+    );
+    Dispatcher.dispatch(payload);
+    resolve();
+  });
 }
 
 /**
@@ -22,7 +57,7 @@ function reThrow(reject, error) {
    * @constructor
    */
   function Action(callback) {"use strict";
-    this.callback = callback;
+    this.callback = callbackToPromise(callback);
   }
 
   /**
@@ -33,16 +68,7 @@ function reThrow(reject, error) {
    */
   Action.prototype.dispatch=function() {"use strict";
     return Promise.resolve(this.callback.apply(this, arguments))
-      .then(function(payload){
-        return new Promise(function(resolve, reject){
-          if (!payload) return reject();
-          if (!payload.actionType) return reThrow(reject,
-            "Payload object requires an actionType property"
-          );
-          Dispatcher.dispatch(payload)
-          resolve();
-        });
-      });
+      .then(dispatchPayload);
   };
 
 
@@ -143,6 +169,35 @@ var EventEmitter = require('events').EventEmitter;
 var assign = require('object-assign');
 var invariant = require('invariant');
 
+function createPRSwitchCase(key) {
+  var switchCases = "";
+  switchCases += "case '"+key+"': res = methods['"+key+"'].call(store, payload); break;";
+  return switchCases;
+}
+
+function createPayloadReceiver(store, callback) {
+  if (typeof callback === 'function') {
+    return callback;
+  }
+
+  var i, fnStr, fn;
+
+  fnStr = "return function(payload){ var res;";
+  fnStr += "switch(payload.actionType){";
+
+  for (i in callback) {
+    if (callback.hasOwnProperty(i)) {
+      fnStr += createPRSwitchCase(i);
+    }
+  }
+
+  fnStr += "} return res; }";
+
+  fn = new Function("store,methods", fnStr);
+  
+  return fn(store, callback);
+}
+
 /**
  * Store class
  */
@@ -158,18 +213,25 @@ var invariant = require('invariant');
    */
   function Store(methods, callback) {"use strict";
     var self = this;
-    this.callback = callback;
+    this.callback = createPayloadReceiver(this,callback);
     invariant(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
     invariant(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
-    assign(this, EventEmitter.prototype, methods);
+    assign(this, new EventEmitter(), methods);
     this.mixin = {
       componentDidMount: function() {
-        self.addChangeListener(this.onChange);
+        var warn = (console.warn || console.log).bind(console);
+        if(!this.storeDidChange){
+            warn("A component that uses a McFly Store mixin is not implementing\
+                  storeDidChange. onChange will be called instead, but this will\
+                  no longer be supported from version 1.0.");
+        }
+
+        self.addChangeListener(this.storeDidChange || this.onChange);
       },
       componentWillUnmount: function() {
-        self.removeChangeListener(this.onChange);
+        self.removeChangeListener(this.storeDidChange || this.onChange);
       }
-    }
+    };
   }
 
   /**
@@ -582,7 +644,7 @@ process.chdir = function (dir) {
  * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
  * @license   Licensed under MIT license
  *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
- * @version   2.0.0
+ * @version   2.0.1
  */
 
 (function() {
@@ -1213,13 +1275,11 @@ process.chdir = function (dir) {
 
       @class Promise
       @param {function} resolver
-      @param {String} label optional string for labeling the promise.
       Useful for tooling.
       @constructor
     */
-    function $$es6$promise$promise$$Promise(resolver, label) {
+    function $$es6$promise$promise$$Promise(resolver) {
       this._id = $$es6$promise$promise$$counter++;
-      this._label = label;
       this._state = undefined;
       this._result = undefined;
       this._subscribers = [];
@@ -1435,11 +1495,10 @@ process.chdir = function (dir) {
       @method then
       @param {Function} onFulfilled
       @param {Function} onRejected
-      @param {String} label optional string for labeling the promise.
       Useful for tooling.
       @return {Promise}
     */
-      then: function(onFulfillment, onRejection, label) {
+      then: function(onFulfillment, onRejection) {
         var parent = this;
         var state = parent._state;
 
@@ -1447,9 +1506,7 @@ process.chdir = function (dir) {
           return this;
         }
 
-        parent._onerror = null;
-
-        var child = new this.constructor($$$internal$$noop, label);
+        var child = new this.constructor($$$internal$$noop);
         var result = parent._result;
 
         if (state) {
@@ -1488,12 +1545,11 @@ process.chdir = function (dir) {
 
       @method catch
       @param {Function} onRejection
-      @param {String} label optional string for labeling the promise.
       Useful for tooling.
       @return {Promise}
     */
-      'catch': function(onRejection, label) {
-        return this.then(null, onRejection, label);
+      'catch': function(onRejection) {
+        return this.then(null, onRejection);
       }
     };
 
@@ -1530,8 +1586,8 @@ process.chdir = function (dir) {
     };
 
     var es6$promise$umd$$ES6Promise = {
-      Promise: $$es6$promise$promise$$default,
-      polyfill: $$es6$promise$polyfill$$default
+      'Promise': $$es6$promise$promise$$default,
+      'polyfill': $$es6$promise$polyfill$$default
     };
 
     /* global define:true module:true window: true */
