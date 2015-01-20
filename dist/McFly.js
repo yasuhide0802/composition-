@@ -1,13 +1,71 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.McFly=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = require('./lib/McFly');
+
+var mcFly = new module.exports();
+
+var store = mcFly.createStore({
+
+},
+{
+  ADD_TODO: function(payload){
+    return this;
+  },
+  FOO_BAR_BAZ: function(payload){
+    return this;
+  },
+  WAY_TO_GO: function(payload){
+    return this;
+  },
+});
+
+console.log('boo', store.callback({actionType: 'FKSDF'}));
+console.log('boo', store.callback({actionType: 'WAY_TO_GO'}));
+console.log('boo', store.callback({actionType: 'FKSDF'}));
+console.log('boo', store.callback({actionType: 'FKSDF'}));
+console.log('boo', store.callback({actionType: 'FKSDF'}));
 },{"./lib/McFly":5}],2:[function(require,module,exports){
 var Dispatcher = require('./Dispatcher');
 var Promise = require('es6-promise').Promise;
 
+var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
+function callbackToPromise(func) {
+  var fnStr = func.toString().replace(STRIP_COMMENTS, '');
+  var args = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')'));
+  
+  if ((/^\s*?\$done/i).test(args)) {
+    return function () {
+      var _self = this, _args = Array.prototype.slice.call(arguments);
+      return new Promise(function(resolve, reject){
+        var done = function $done(err, result) {
+          if (err) return reject(err);
+          return resolve(result);
+        };
+
+        _args.unshift(done);
+        func.apply(_self, _args);
+      });
+    };
+  }
+
+  return func;
+}
 
 function reThrow(reject, error) {
   setTimeout(function(){ throw error; }, 0);
   return reject();
+}
+
+function dispatchPayload(payload) {
+  console.log('dispatched!', payload)
+  return new Promise(function(resolve, reject){
+    if (!payload) return reject();
+    if (!payload.actionType) return reThrow(reject,
+      "Payload object requires an actionType property"
+    );
+    Dispatcher.dispatch(payload);
+    resolve();
+  });
 }
 
 /**
@@ -22,7 +80,7 @@ function reThrow(reject, error) {
    * @constructor
    */
   function Action(callback) {"use strict";
-    this.callback = callback;
+    this.callback = callbackToPromise(callback);
   }
 
   /**
@@ -33,16 +91,7 @@ function reThrow(reject, error) {
    */
   Action.prototype.dispatch=function() {"use strict";
     return Promise.resolve(this.callback.apply(this, arguments))
-      .then(function(payload){
-        return new Promise(function(resolve, reject){
-          if (!payload) return reject();
-          if (!payload.actionType) return reThrow(reject,
-            "Payload object requires an actionType property"
-          );
-          Dispatcher.dispatch(payload)
-          resolve();
-        });
-      });
+      .then(dispatchPayload);
   };
 
 
@@ -143,6 +192,35 @@ var EventEmitter = require('events').EventEmitter;
 var assign = require('object-assign');
 var invariant = require('invariant');
 
+function createPRSwitchCase(key) {
+  var switchCases = "";
+  switchCases += "case '"+key+"': res = methods['"+key+"'].call(store, payload); break;";
+  return switchCases;
+}
+
+function createPayloadReceiver(store, callback) {
+  if (typeof callback === 'function') {
+    return callback;
+  }
+
+  var i, fnStr, fn;
+
+  fnStr = "return function(payload){ var res;";
+  fnStr += "switch(payload.actionType){";
+
+  for (i in callback) {
+    if (callback.hasOwnProperty(i)) {
+      fnStr += createPRSwitchCase(i);
+    }
+  }
+
+  fnStr += "} return res; }";
+
+  fn = new Function("store,methods", fnStr);
+  
+  return fn(store, callback);
+}
+
 /**
  * Store class
  */
@@ -158,10 +236,10 @@ var invariant = require('invariant');
    */
   function Store(methods, callback) {"use strict";
     var self = this;
-    this.callback = callback;
+    this.callback = createPayloadReceiver(this,callback);
     invariant(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
     invariant(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
-    assign(this, EventEmitter.prototype, methods);
+    assign(this, new EventEmitter(), methods);
     this.mixin = {
       componentDidMount: function() {
         var warn = (console.warn || console.log).bind(console);
@@ -176,7 +254,7 @@ var invariant = require('invariant');
       componentWillUnmount: function() {
         self.removeChangeListener(this.storeDidChange || this.onChange);
       }
-    }
+    };
   }
 
   /**
