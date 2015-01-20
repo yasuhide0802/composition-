@@ -20,7 +20,7 @@ class Store {
     this.callback = callback;
     invariant(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
     invariant(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
-    assign(this, EventEmitter.prototype, methods);
+    assign(this, new EventEmitter(), methods);
     this.mixin = {
       componentDidMount: function() {
         var warn = (console.warn || console.log).bind(console);
@@ -35,7 +35,7 @@ class Store {
       componentWillUnmount: function() {
         self.removeChangeListener(this.storeDidChange || this.onChange);
       }
-    }
+    };
   }
 
   /**
