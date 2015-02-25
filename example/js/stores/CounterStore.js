@@ -1,4 +1,4 @@
-var mcFly = require('../flux/mcFly');
+var biff = require('../flux/biff');
 
 var _count = 0;
 
@@ -6,7 +6,7 @@ function countOne(text) {
   _count++;
 }
 
-var CounterStore = mcFly.createStore({
+var CounterStore = biff.createStore({
 
   getCount: function() {
     return _count;

@@ -1,29 +1,29 @@
 // __tests__/Store-test.js
 
-jest.dontMock('../McFly');
+jest.dontMock('../Biff');
 jest.dontMock('../Store');
 jest.dontMock('../ActionsFactory');
 jest.dontMock('../Dispatcher');
 jest.dontMock('object-assign');
 
-describe('McFly', function() {
+describe('Biff', function() {
 
-  var McFly = require('../McFly');
+  var Biff = require('../Biff');
   var Store = require('../Store');
   var ActionsFactory = require('../ActionsFactory');
-  var mcFly,mockStore,mockActionsFactory;
+  var Biff,mockStore,mockActionsFactory;
 
-  mcFly = new McFly();
+  Biff = new Biff();
 
   it('should instantiate a new dispatcher and attach it to the new instance', function() {
 
-    expect(mcFly.dispatcher).toBeDefined();
+    expect(Biff.dispatcher).toBeDefined();
 
   });
 
   it('should create a new Store when createStore is called', function() {
 
-    mockStore = mcFly.createStore({testMethod: function(){}}, function(){});
+    mockStore = Biff.createStore({testMethod: function(){}}, function(){});
 
     expect(mockStore instanceof Store).toEqual(true);
 
@@ -31,7 +31,7 @@ describe('McFly', function() {
 
   it('should store created Stores in a stores property', function() {
 
-    expect(mcFly.stores.indexOf(mockStore) !== -1).toEqual(true);
+    expect(Biff.stores.indexOf(mockStore) !== -1).toEqual(true);
 
   });
 
@@ -43,7 +43,7 @@ describe('McFly', function() {
 
   it('should create a new ActionsFactory when createActions is called', function() {
 
-    mockActionsFactory = mcFly.createActions({
+    mockActionsFactory = Biff.createActions({
       testMethod: function(test) {
         return {
           actionType: 'TEST_ADD',
@@ -58,7 +58,7 @@ describe('McFly', function() {
 
   it('should store created ActionsFactory methods in an actions property', function() {
 
-    expect("testMethod" in mcFly.actions).toEqual(true);
+    expect("testMethod" in Biff.actions).toEqual(true);
 
   });
 

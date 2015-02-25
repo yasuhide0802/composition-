@@ -1,16 +1,5 @@
-'use strict';
 var Dispatcher = require('./Dispatcher');
-var Promise = require('es6-promise').Promise;
-
-
-function reThrow(reject, error) {
-  setTimeout(function(){ 
-      if (error && error.stack) {
-          console.error(error.stack);
-      }
-      throw error; }, 0);
-  return reject();
-}
+var invariant = require('invariant');
 
 /**
  * Action class
@@ -31,26 +20,12 @@ class Action {
    * Calls callback method from Dispatcher
    *
    * @param {...*} arguments - arguments for callback method
-   * @returns Promise object
+   * @constructor
    */
   dispatch() {
-    return Promise.resolve(this.callback.apply(this, arguments))
-      .then(function(payload){
-        return new Promise(function(resolve, reject){
-          if (!payload) return reject();
-          if (!payload.actionType) return reThrow(reject,
-            "Payload object requires an actionType property"
-          );
-
-          try {
-            Dispatcher.dispatch(payload);
-          } catch (error) {
-            reThrow(reject, error); 
-          }
-
-          resolve();
-        });
-      });
+    var payload = this.callback.apply(this, arguments);
+    invariant(payload.actionType, "Payload object requires an actionType property");
+    Dispatcher.dispatch(payload);
   }
 }
 

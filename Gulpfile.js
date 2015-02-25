@@ -6,11 +6,11 @@ var del = require('del');
 
 var browserifyConfig = {
   entries: ['./index.js'],
-  standalone: 'McFly'
+  standalone: 'Biff'
 };
 
 gulp.task('clean', function(cb) {
-  del(['lib/', 'McFly.js'], cb);
+  del(['lib/', 'Biff.js'], cb);
 });
 
 gulp.task('lib', function() {
@@ -23,7 +23,7 @@ gulp.task('lib', function() {
 gulp.task('browserify', ['lib'], function() {
   return browserify(browserifyConfig)
           .bundle()
-          .pipe(source('McFly.js'))
+          .pipe(source('Biff.js'))
           .pipe(gulp.dest('./dist/'))
 });
 

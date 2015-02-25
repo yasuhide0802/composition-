@@ -25,20 +25,18 @@ class Store {
     assign(this, EventEmitter.prototype, methods);
     this.mixin = {
       componentDidMount: function() {
-        var warn = (console.warn || console.log).bind(console),
-          changeFn;
+        var warn = (console.warn || console.log).bind(console);
         if(!this.storeDidChange){
-            warn("A component that uses a McFly Store mixin is not implementing storeDidChange. onChange will be called instead, but this will no longer be supported from version 1.0.");
+            warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
         }
-        changeFn = this.storeDidChange || this.onChange;
-        if(!changeFn){
-            warn("A change handler is missing from a component with a McFly mixin. Notifications from Stores are not being handled.");
-        }
-        this.listener = ()=>{ this.isMounted() && changeFn(); }
+        this.listener = ()=>{ this.isMounted() && this.storeDidChange(); }
+        this.errorListener = ()=>{ this.isMounted() && this.storeError && this.storeError(); }
         self.addChangeListener(this.listener);
+        self.addErrorListener(this.errorListener);
       },
       componentWillUnmount: function() {
         this.listener && self.removeChangeListener(this.listener);
+        this.errorListener && self.removeErrorListener(this.errorListener);
       }
     }
   }
@@ -58,6 +56,14 @@ class Store {
   }
 
   /**
+   * Emits an error event
+   */
+
+   emitError() {
+    this.emit('error',arguments);
+   }
+
+  /**
    * Adds a change listener
    *
    * @param {function} callback - Callback method for change event
@@ -73,6 +79,24 @@ class Store {
    */
   removeChangeListener(callback) {
     this.removeListener('change', callback);
+  }
+
+  /**
+   * Adds an error listener
+   *
+   * @param {function} callback - Callback method for error event
+   */
+  addErrorListener(callback) {
+    this.on('error', callback);
+  }
+
+  /**
+   * Removes an error listener
+   *
+   * @param {function} callback - Callback method for error event
+   */
+  removeErrorListener(callback) {
+    this.removeListener('error', callback);
   }
 
 }
