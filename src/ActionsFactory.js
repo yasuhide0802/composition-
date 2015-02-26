@@ -22,8 +22,8 @@ class ActionsFactory {
     var action;
     for (a in actions) {
       if (actions.hasOwnProperty(a)) {
-        action = new Action(actions[a]);
-        _actions[a] = action.dispatch.bind(action, dispatcher);
+        action = new Action(actions[a], dispatcher);
+        _actions[a] = action.dispatch.bind(action);
       }
     }
     assign(this, _actions);
