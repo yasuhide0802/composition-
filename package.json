@@ -36,7 +36,6 @@
   "devDependencies": {
     "browserify": "^5.9.1",
     "del": "^0.1.2",
-    "esprima-harmony": "^7001.1.0-dev-harmony-fb",
     "gulp": "^3.8.6",
     "gulp-babel": "^4.0.0",
     "gulp-jscs-custom": "^0.1.2",
