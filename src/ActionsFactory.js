@@ -15,12 +15,15 @@ class ActionsFactory {
    * @param {object} actions - Object with methods to create actions with
    * @constructor
    */
+
   constructor(actions, dispatcher) {
-    var _actions = {}, a, action;
+    var _actions = {};
+    var a;
+    var action;
     for (a in actions) {
-      if(actions.hasOwnProperty(a)){
+      if (actions.hasOwnProperty(a)) {
         action = new Action(actions[a]);
-        _actions[a] = action.dispatch.bind(action,dispatcher);
+        _actions[a] = action.dispatch.bind(action, dispatcher);
       }
     }
     assign(this, _actions);

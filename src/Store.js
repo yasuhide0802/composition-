@@ -21,20 +21,20 @@ class Store {
     var self = this;
     this.callback = callback;
     iv(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
-    iv(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
+    iv(!methods.mixin, '"mixin" is a reserved name and cannot be used as a method name.');
     assign(this, EventEmitter.prototype, methods);
     this.mixin = {
-      componentDidMount: function() {
+      componentDidMount: function () {
         var warn = (console.warn || console.log).bind(console);
-        if(!this.storeDidChange){
-            warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
+        if (!this.storeDidChange) {
+          warn('A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.');
         }
-        this.listener = ()=>{ this.isMounted() && this.storeDidChange(); }
-        this.errorListener = ()=>{ this.isMounted() && this.storeError && this.storeError(); }
+        this.listener = ()=> { this.isMounted() && this.storeDidChange(); }
+        this.errorListener = ()=> { this.isMounted() && this.storeError && this.storeError(); }
         self.addChangeListener(this.listener);
         self.addErrorListener(this.errorListener);
       },
-      componentWillUnmount: function() {
+      componentWillUnmount: function () {
         this.listener && self.removeChangeListener(this.listener);
         this.errorListener && self.removeErrorListener(this.errorListener);
       }
@@ -59,9 +59,9 @@ class Store {
    * Emits an error event
    */
 
-   emitError() {
-    this.emit('error',arguments);
-   }
+  emitError() {
+    this.emit('error', arguments);
+  }
 
   /**
    * Adds a change listener

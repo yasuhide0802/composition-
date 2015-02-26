@@ -1,8 +1,9 @@
 var gulp = require('gulp');
-var gReact = require('gulp-react')
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 var del = require('del');
+var jscs = require('gulp-jscs-custom');
+var babel = require('gulp-babel');
 
 var browserifyConfig = {
   entries: ['./index.js'],
@@ -10,13 +11,13 @@ var browserifyConfig = {
 };
 
 gulp.task('clean', function(cb) {
-  del(['lib/', 'Biff.js'], cb);
+  del(['lib', 'dist'], cb);
 });
 
-gulp.task('lib', function() {
+gulp.task('lib', ['clean'], function() {
   return gulp.src('src/*.js')
-             .pipe(gReact({harmony: true}))
-             .pipe(gulp.dest('lib'));
+             .pipe(babel())
+             .pipe(gulp.dest('lib'))
 
 });
 
@@ -27,5 +28,9 @@ gulp.task('browserify', ['lib'], function() {
           .pipe(gulp.dest('./dist/'))
 });
 
-gulp.task('publish', ['clean', 'default']);
-gulp.task('default', ['lib', 'browserify']);
+gulp.task('jscs', function(){
+  return gulp.src('src/*.js')
+      .pipe(jscs({esnext: true}))
+});
+
+gulp.task('default', ['jscs', 'clean', 'lib', 'browserify']);

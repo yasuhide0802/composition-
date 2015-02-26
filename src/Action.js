@@ -11,7 +11,7 @@ class Action {
    * @param {function} callback - Callback method for Action
    * @constructor
    */
-  constructor(callback,dispatcher) {
+  constructor(callback, dispatcher) {
     this.callback = callback;
     this.dispatcher = dispatcher;
   }
@@ -24,7 +24,7 @@ class Action {
    */
   dispatch() {
     var payload = this.callback.apply(this, arguments);
-    invariant(payload.actionType, "Payload object requires an actionType property");
+    invariant(payload.actionType, 'Payload object requires an actionType property');
     this.dispatcher.dispatch(payload);
   }
 }
