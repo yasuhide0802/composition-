@@ -1,4 +1,4 @@
-var Biff = require('biff');
+var Biff = require('../dist/Biff.js');
 
 var biff = new Biff();
 

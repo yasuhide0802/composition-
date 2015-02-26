@@ -1,7 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Biff=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = require('./lib/Biff');
 },{"./lib/Biff":4}],2:[function(require,module,exports){
-var Dispatcher = require('./Dispatcher');
 var invariant = require('invariant');
 
 /**
@@ -15,8 +14,9 @@ var invariant = require('invariant');
    * @param {function} callback - Callback method for Action
    * @constructor
    */
-  function Action(callback) {"use strict";
+  function Action(callback,dispatcher) {"use strict";
     this.callback = callback;
+    this.dispatcher = dispatcher;
   }
 
   /**
@@ -28,12 +28,12 @@ var invariant = require('invariant');
   Action.prototype.dispatch=function() {"use strict";
     var payload = this.callback.apply(this, arguments);
     invariant(payload.actionType, "Payload object requires an actionType property");
-    Dispatcher.dispatch(payload);
+    this.dispatcher.dispatch(payload);
   };
 
 
 module.exports = Action;
-},{"./Dispatcher":5,"invariant":11}],3:[function(require,module,exports){
+},{"invariant":10}],3:[function(require,module,exports){
 'use strict';
 
 var Action = require('./Action');
@@ -51,12 +51,12 @@ var assign = require('object-assign');
    * @param {object} actions - Object with methods to create actions with
    * @constructor
    */
-  function ActionsFactory(actions) {
+  function ActionsFactory(actions, dispatcher) {
     var $ActionsFactory_actions = {}, a, action;
     for (a in actions) {
       if(actions.hasOwnProperty(a)){
         action = new Action(actions[a]);
-        $ActionsFactory_actions[a] = action.dispatch.bind(action);
+        $ActionsFactory_actions[a] = action.dispatch.bind(action,dispatcher);
       }
     }
     assign(this, $ActionsFactory_actions);
@@ -65,10 +65,10 @@ var assign = require('object-assign');
 
 module.exports = ActionsFactory;
 
-},{"./Action":2,"object-assign":12}],4:[function(require,module,exports){
+},{"./Action":2,"object-assign":11}],4:[function(require,module,exports){
 'use strict';
 
-var Dispatcher = require('./Dispatcher');
+var Dispatcher = require('flux').Dispatcher;
 var Store = require('./Store');
 var ActionsFactory = require('./ActionsFactory');
 var assign = require('object-assign');
@@ -87,7 +87,7 @@ var assign = require('object-assign');
   function Biff(){
     this.actions = {};
     this.stores = [];
-    this.dispatcher = Dispatcher;
+    this.dispatcher = new Dispatcher();
   }
 
   /**
@@ -113,7 +113,7 @@ var assign = require('object-assign');
    * @return {object} - Returns instance of ActionsFactory
    */
   Biff.prototype.createActions=function(actions) {
-    var actionFactory = new ActionsFactory(actions);
+    var actionFactory = new ActionsFactory(actions, this.dispatcher);
     assign(this.actions,actionFactory);
     return actionFactory;
   };
@@ -122,17 +122,7 @@ var assign = require('object-assign');
 
 module.exports = Biff;
 
-},{"./ActionsFactory":3,"./Dispatcher":5,"./Store":6,"object-assign":12}],5:[function(require,module,exports){
-'use strict';
-
-var Dispatcher = require('flux').Dispatcher;
-
-/** Creates a singlar instance of Facebook's Dispatcher */
-var AppDispatcher = new Dispatcher();
-
-module.exports = AppDispatcher;
-
-},{"flux":8}],6:[function(require,module,exports){
+},{"./ActionsFactory":3,"./Store":5,"flux":7,"object-assign":11}],5:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events').EventEmitter;
@@ -238,7 +228,7 @@ var iv = require('invariant');
 
 module.exports = Store;
 
-},{"events":7,"invariant":11,"object-assign":12}],7:[function(require,module,exports){
+},{"events":6,"invariant":10,"object-assign":11}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -541,7 +531,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -553,7 +543,7 @@ function isUndefined(arg) {
 
 module.exports.Dispatcher = require('./lib/Dispatcher')
 
-},{"./lib/Dispatcher":9}],9:[function(require,module,exports){
+},{"./lib/Dispatcher":8}],8:[function(require,module,exports){
 /*
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -805,7 +795,7 @@ var _prefix = 'ID_';
 
 module.exports = Dispatcher;
 
-},{"./invariant":10}],10:[function(require,module,exports){
+},{"./invariant":9}],9:[function(require,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -860,7 +850,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * BSD License
  *
@@ -938,7 +928,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 function ToObject(val) {
