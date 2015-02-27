@@ -1,7 +1,6 @@
 // __tests__/Store-test.js
 
 jest.dontMock('../Store');
-jest.dontMock('../Dispatcher');
 jest.dontMock('object-assign');
 jest.dontMock('invariant');
 

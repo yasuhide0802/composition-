@@ -1,6 +1,6 @@
 'use strict';
 
-var Dispatcher = require('./Dispatcher');
+var Dispatcher = require('flux').Dispatcher;
 var Store = require('./Store');
 var ActionsFactory = require('./ActionsFactory');
 var assign = require('object-assign');
@@ -16,10 +16,10 @@ class Biff {
    *
    * @constructor
    */
-  constructor(){
+  constructor() {
     this.actions = {};
     this.stores = [];
-    this.dispatcher = Dispatcher;
+    this.dispatcher = new Dispatcher();
   }
 
   /**
@@ -30,8 +30,8 @@ class Biff {
    * @param {function} callback - Callback method for Dispatcher dispatches
    * @return {object} - Returns instance of Store
    */
-  createStore(methods,callback){
-    var store = new Store(methods,callback);
+  createStore(methods, callback) {
+    var store = new Store(methods, callback);
     store.dispatcherID = this.dispatcher.register(store.callback);
     this.stores.push(store);
     return store;
@@ -45,8 +45,8 @@ class Biff {
    * @return {object} - Returns instance of ActionsFactory
    */
   createActions(actions) {
-    var actionFactory = new ActionsFactory(actions);
-    assign(this.actions,actionFactory);
+    var actionFactory = new ActionsFactory(actions, this.dispatcher);
+    assign(this.actions, actionFactory);
     return actionFactory;
   }
 

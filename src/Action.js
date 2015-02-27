@@ -1,4 +1,3 @@
-var Dispatcher = require('./Dispatcher');
 var invariant = require('invariant');
 
 /**
@@ -12,8 +11,9 @@ class Action {
    * @param {function} callback - Callback method for Action
    * @constructor
    */
-  constructor(callback) {
+  constructor(callback, dispatcher) {
     this.callback = callback;
+    this.dispatcher = dispatcher;
   }
 
   /**
@@ -24,8 +24,8 @@ class Action {
    */
   dispatch() {
     var payload = this.callback.apply(this, arguments);
-    invariant(payload.actionType, "Payload object requires an actionType property");
-    Dispatcher.dispatch(payload);
+    invariant(payload.actionType, 'Payload object requires an actionType property');
+    this.dispatcher.dispatch(payload);
   }
 }
 

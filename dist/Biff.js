@@ -1,13 +1,19 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Biff=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = require('./lib/Biff');
 },{"./lib/Biff":4}],2:[function(require,module,exports){
-var Dispatcher = require('./Dispatcher');
-var invariant = require('invariant');
+"use strict";
+
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+var invariant = require("invariant");
 
 /**
  * Action class
  */
 
+var Action = (function () {
 
   /**
    * Constructs an Action object
@@ -15,68 +21,93 @@ var invariant = require('invariant');
    * @param {function} callback - Callback method for Action
    * @constructor
    */
-  function Action(callback) {"use strict";
+
+  function Action(callback, dispatcher) {
+    _classCallCheck(this, Action);
+
     this.callback = callback;
+    this.dispatcher = dispatcher;
   }
 
-  /**
-   * Calls callback method from Dispatcher
-   *
-   * @param {...*} arguments - arguments for callback method
-   * @constructor
-   */
-  Action.prototype.dispatch=function() {"use strict";
-    var payload = this.callback.apply(this, arguments);
-    invariant(payload.actionType, "Payload object requires an actionType property");
-    Dispatcher.dispatch(payload);
-  };
+  _prototypeProperties(Action, null, {
+    dispatch: {
 
+      /**
+       * Calls callback method from Dispatcher
+       *
+       * @param {...*} arguments - arguments for callback method
+       * @constructor
+       */
+
+      value: function dispatch() {
+        var payload = this.callback.apply(this, arguments);
+        invariant(payload.actionType, "Payload object requires an actionType property");
+        this.dispatcher.dispatch(payload);
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Action;
+})();
 
 module.exports = Action;
-},{"./Dispatcher":5,"invariant":11}],3:[function(require,module,exports){
-'use strict';
+},{"invariant":10}],3:[function(require,module,exports){
+"use strict";
 
-var Action = require('./Action');
-var assign = require('object-assign');
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+var Action = require("./Action");
+var assign = require("object-assign");
 
 /**
  * ActionsFactory class
  */
 
+var ActionsFactory =
 
-  /**
-   * Constructs an ActionsFactory object and translates actions parameter into
-   * Action objects.
-   *
-   * @param {object} actions - Object with methods to create actions with
-   * @constructor
-   */
-  function ActionsFactory(actions) {
-    var $ActionsFactory_actions = {}, a, action;
-    for (a in actions) {
-      if(actions.hasOwnProperty(a)){
-        action = new Action(actions[a]);
-        $ActionsFactory_actions[a] = action.dispatch.bind(action);
-      }
+/**
+ * Constructs an ActionsFactory object and translates actions parameter into
+ * Action objects.
+ *
+ * @param {object} actions - Object with methods to create actions with
+ * @constructor
+ */
+
+function ActionsFactory(actions, dispatcher) {
+  _classCallCheck(this, ActionsFactory);
+
+  var _actions = {};
+  var a;
+  var action;
+  for (a in actions) {
+    if (actions.hasOwnProperty(a)) {
+      action = new Action(actions[a], dispatcher);
+      _actions[a] = action.dispatch.bind(action);
     }
-    assign(this, $ActionsFactory_actions);
   }
-
+  assign(this, _actions);
+};
 
 module.exports = ActionsFactory;
+},{"./Action":2,"object-assign":11}],4:[function(require,module,exports){
+"use strict";
 
-},{"./Action":2,"object-assign":12}],4:[function(require,module,exports){
-'use strict';
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
-var Dispatcher = require('./Dispatcher');
-var Store = require('./Store');
-var ActionsFactory = require('./ActionsFactory');
-var assign = require('object-assign');
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+var Dispatcher = require("flux").Dispatcher;
+var Store = require("./Store");
+var ActionsFactory = require("./ActionsFactory");
+var assign = require("object-assign");
 
 /**
  * Main Biff Class
  */
 
+var Biff = (function () {
 
   /**
    * Instatiates Biff along with actions object, stores array and sets
@@ -84,65 +115,76 @@ var assign = require('object-assign');
    *
    * @constructor
    */
-  function Biff(){
+
+  function Biff() {
+    _classCallCheck(this, Biff);
+
     this.actions = {};
     this.stores = [];
-    this.dispatcher = Dispatcher;
+    this.dispatcher = new Dispatcher();
   }
 
-  /**
-   * Creates an instance of a Store, registers the supplied callback with the
-   * dispatcher, and pushes it into the global list of stores
-   *
-   * @param {object} methods - Public methods for Store instance
-   * @param {function} callback - Callback method for Dispatcher dispatches
-   * @return {object} - Returns instance of Store
-   */
-  Biff.prototype.createStore=function(methods,callback){
-    var store = new Store(methods,callback);
-    store.dispatcherID = this.dispatcher.register(store.callback);
-    this.stores.push(store);
-    return store;
-  };
+  _prototypeProperties(Biff, null, {
+    createStore: {
 
-  /**
-   * Creates an instance of an ActionsFactory and adds the supplied actions
-   * to the global list of actions
-   *
-   * @param {object} actions - Action methods
-   * @return {object} - Returns instance of ActionsFactory
-   */
-  Biff.prototype.createActions=function(actions) {
-    var actionFactory = new ActionsFactory(actions);
-    assign(this.actions,actionFactory);
-    return actionFactory;
-  };
+      /**
+       * Creates an instance of a Store, registers the supplied callback with the
+       * dispatcher, and pushes it into the global list of stores
+       *
+       * @param {object} methods - Public methods for Store instance
+       * @param {function} callback - Callback method for Dispatcher dispatches
+       * @return {object} - Returns instance of Store
+       */
 
+      value: function createStore(methods, callback) {
+        var store = new Store(methods, callback);
+        store.dispatcherID = this.dispatcher.register(store.callback);
+        this.stores.push(store);
+        return store;
+      },
+      writable: true,
+      configurable: true
+    },
+    createActions: {
 
+      /**
+       * Creates an instance of an ActionsFactory and adds the supplied actions
+       * to the global list of actions
+       *
+       * @param {object} actions - Action methods
+       * @return {object} - Returns instance of ActionsFactory
+       */
+
+      value: function createActions(actions) {
+        var actionFactory = new ActionsFactory(actions, this.dispatcher);
+        assign(this.actions, actionFactory);
+        return actionFactory;
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Biff;
+})();
 
 module.exports = Biff;
+},{"./ActionsFactory":3,"./Store":5,"flux":7,"object-assign":11}],5:[function(require,module,exports){
+"use strict";
 
-},{"./ActionsFactory":3,"./Dispatcher":5,"./Store":6,"object-assign":12}],5:[function(require,module,exports){
-'use strict';
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
-var Dispatcher = require('flux').Dispatcher;
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-/** Creates a singlar instance of Facebook's Dispatcher */
-var AppDispatcher = new Dispatcher();
-
-module.exports = AppDispatcher;
-
-},{"flux":8}],6:[function(require,module,exports){
-'use strict';
-
-var EventEmitter = require('events').EventEmitter;
-var assign = require('object-assign');
-var iv = require('invariant');
+var EventEmitter = require("events").EventEmitter;
+var assign = require("object-assign");
+var iv = require("invariant");
 
 /**
  * Store class
  */
 
+var Store = (function () {
 
   /**
    * Constructs a Store object, extends it with EventEmitter and supplied
@@ -152,93 +194,139 @@ var iv = require('invariant');
    * @param {function} callback - Callback method for Dispatcher dispatches
    * @constructor
    */
+
   function Store(methods, callback) {
+    _classCallCheck(this, Store);
+
     var self = this;
     this.callback = callback;
-    iv(!methods.callback, '"callback" is a reserved name and cannot be used as a method name.');
-    iv(!methods.mixin,'"mixin" is a reserved name and cannot be used as a method name.');
+    iv(!methods.callback, "\"callback\" is a reserved name and cannot be used as a method name.");
+    iv(!methods.mixin, "\"mixin\" is a reserved name and cannot be used as a method name.");
     assign(this, EventEmitter.prototype, methods);
     this.mixin = {
-      componentDidMount: function() {
+      componentDidMount: function componentDidMount() {
+        var _this = this;
+
         var warn = (console.warn || console.log).bind(console);
-        if(!this.storeDidChange){
-            warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
+        if (!this.storeDidChange) {
+          warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
         }
-        this.listener = function(){ this.isMounted() && this.storeDidChange(); }.bind(this)
-        this.errorListener = function(){ this.isMounted() && this.storeError && this.storeError(); }.bind(this)
+        this.listener = function () {
+          _this.isMounted() && _this.storeDidChange();
+        };
+        this.errorListener = function () {
+          _this.isMounted() && _this.storeError && _this.storeError();
+        };
         self.addChangeListener(this.listener);
         self.addErrorListener(this.errorListener);
       },
-      componentWillUnmount: function() {
+      componentWillUnmount: function componentWillUnmount() {
         this.listener && self.removeChangeListener(this.listener);
         this.errorListener && self.removeErrorListener(this.errorListener);
       }
-    }
+    };
   }
 
-  /**
-   * Returns dispatch token
-   */
-  Store.prototype.getDispatchToken=function() {
-    return this.dispatcherID;
-  };
+  _prototypeProperties(Store, null, {
+    getDispatchToken: {
 
-  /**
-   * Emits change event
-   */
-  Store.prototype.emitChange=function() {
-    this.emit('change');
-  };
+      /**
+       * Returns dispatch token
+       */
 
-  /**
-   * Emits an error event
-   */
+      value: function getDispatchToken() {
+        return this.dispatcherID;
+      },
+      writable: true,
+      configurable: true
+    },
+    emitChange: {
 
-   Store.prototype.emitError=function() {
-    this.emit('error',arguments);
-   };
+      /**
+       * Emits change event
+       */
 
-  /**
-   * Adds a change listener
-   *
-   * @param {function} callback - Callback method for change event
-   */
-  Store.prototype.addChangeListener=function(callback) {
-    this.on('change', callback);
-  };
+      value: function emitChange() {
+        this.emit("change");
+      },
+      writable: true,
+      configurable: true
+    },
+    emitError: {
 
-  /**
-   * Removes a change listener
-   *
-   * @param {function} callback - Callback method for change event
-   */
-  Store.prototype.removeChangeListener=function(callback) {
-    this.removeListener('change', callback);
-  };
+      /**
+       * Emits an error event
+       */
 
-  /**
-   * Adds an error listener
-   *
-   * @param {function} callback - Callback method for error event
-   */
-  Store.prototype.addErrorListener=function(callback) {
-    this.on('error', callback);
-  };
+      value: function emitError() {
+        this.emit("error", arguments);
+      },
+      writable: true,
+      configurable: true
+    },
+    addChangeListener: {
 
-  /**
-   * Removes an error listener
-   *
-   * @param {function} callback - Callback method for error event
-   */
-  Store.prototype.removeErrorListener=function(callback) {
-    this.removeListener('error', callback);
-  };
+      /**
+       * Adds a change listener
+       *
+       * @param {function} callback - Callback method for change event
+       */
 
+      value: function addChangeListener(callback) {
+        this.on("change", callback);
+      },
+      writable: true,
+      configurable: true
+    },
+    removeChangeListener: {
 
+      /**
+       * Removes a change listener
+       *
+       * @param {function} callback - Callback method for change event
+       */
+
+      value: function removeChangeListener(callback) {
+        this.removeListener("change", callback);
+      },
+      writable: true,
+      configurable: true
+    },
+    addErrorListener: {
+
+      /**
+       * Adds an error listener
+       *
+       * @param {function} callback - Callback method for error event
+       */
+
+      value: function addErrorListener(callback) {
+        this.on("error", callback);
+      },
+      writable: true,
+      configurable: true
+    },
+    removeErrorListener: {
+
+      /**
+       * Removes an error listener
+       *
+       * @param {function} callback - Callback method for error event
+       */
+
+      value: function removeErrorListener(callback) {
+        this.removeListener("error", callback);
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Store;
+})();
 
 module.exports = Store;
-
-},{"events":7,"invariant":11,"object-assign":12}],7:[function(require,module,exports){
+},{"events":6,"invariant":10,"object-assign":11}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -541,7 +629,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -553,7 +641,7 @@ function isUndefined(arg) {
 
 module.exports.Dispatcher = require('./lib/Dispatcher')
 
-},{"./lib/Dispatcher":9}],9:[function(require,module,exports){
+},{"./lib/Dispatcher":8}],8:[function(require,module,exports){
 /*
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -805,7 +893,7 @@ var _prefix = 'ID_';
 
 module.exports = Dispatcher;
 
-},{"./invariant":10}],10:[function(require,module,exports){
+},{"./invariant":9}],9:[function(require,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -860,7 +948,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * BSD License
  *
@@ -938,7 +1026,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 function ToObject(val) {

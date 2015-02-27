@@ -3,7 +3,6 @@
 jest.dontMock('../Biff');
 jest.dontMock('../Store');
 jest.dontMock('../ActionsFactory');
-jest.dontMock('../Dispatcher');
 jest.dontMock('object-assign');
 
 describe('Biff', function() {

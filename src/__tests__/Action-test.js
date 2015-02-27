@@ -6,7 +6,7 @@ jest.dontMock('invariant');
 describe('Action', function() {
 
   var Action = require('../Action');
-  var Dispatcher = require('../Dispatcher');
+  var dispatcher = {dispatch: jest.genMockFunction()};
   var mockAction;
   var callback;
 
@@ -16,7 +16,7 @@ describe('Action', function() {
       return;
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback, dispatcher);
 
     expect(mockAction.callback).toBe(callback);
 
@@ -30,7 +30,7 @@ describe('Action', function() {
       };
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback,dispatcher);
 
     expect(function() {
       mockAction.dispatch("test");
@@ -47,7 +47,7 @@ describe('Action', function() {
       };
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback,dispatcher);
 
     expect(function() {
       mockAction.dispatch("test");
@@ -56,9 +56,7 @@ describe('Action', function() {
   });
 
   it('should have dispatched the supplied payload', function(){
-
-      expect(Dispatcher.dispatch.mock.calls.length).toEqual(1);
-
+      expect(mockAction.dispatcher.dispatch.mock.calls.length).toEqual(1);
   });
 
 });
