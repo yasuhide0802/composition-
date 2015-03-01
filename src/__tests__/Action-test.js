@@ -6,7 +6,7 @@ jest.dontMock('invariant');
 describe('Action', function() {
 
   var Action = require('../Action');
-  var Dispatcher = require('../Dispatcher');
+  var dispatcher = {dispatch: jest.genMockFunction()};
   var mockAction;
   var callback;
 
@@ -16,7 +16,7 @@ describe('Action', function() {
       return;
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback, dispatcher);
 
     expect(mockAction.callback).toBe(callback);
 
@@ -30,11 +30,10 @@ describe('Action', function() {
       };
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback,dispatcher);
 
     expect(function() {
       mockAction.dispatch("test");
-      jest.runAllTimers();
     }).toThrow();
 
   });
@@ -48,48 +47,16 @@ describe('Action', function() {
       };
     };
 
-    mockAction = new Action(callback);
+    mockAction = new Action(callback,dispatcher);
 
     expect(function() {
       mockAction.dispatch("test");
-      jest.runAllTimers();
     }).not.toThrow();
 
   });
 
-  pit('should reject if returns falsy value', function(){
-
-    callback = function(argument) {
-      return false;
-    };
-
-    return (new Action(callback)).dispatch("test")["catch"](
-      function(error){
-        expect(error).toBeUndefined();
-      });
-
-  });
-
-  pit('should resolve if actionType IS supplied', function(){
-
-    callback = function(argument) {
-      return{
-        actionType: 'TEST_ACTION',
-        test: argument
-      };
-    };
-
-    return (new Action(callback)).dispatch("test").then(
-      function(success){
-        expect(success).toBeUndefined();
-      });
-
-  });
-
   it('should have dispatched the supplied payload', function(){
-
-      expect(Dispatcher.dispatch.mock.calls.length).toEqual(2);
-
+      expect(mockAction.dispatcher.dispatch.mock.calls.length).toEqual(1);
   });
 
 });

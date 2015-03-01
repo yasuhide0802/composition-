@@ -1,11 +1,11 @@
 {
-  "name": "mcfly",
-  "version": "0.0.10",
+  "name": "biff",
+  "version": "0.0.1",
   "description": "Flux architecture made easy",
   "keywords": [
     "flux",
     "react",
-    "mcfly"
+    "biff"
   ],
   "files": [
     "index.js",
@@ -16,9 +16,9 @@
   "author": "Ken Wheeler",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kenwheeler/mcfly"
+    "url": "https://github.com/formidablelabs/biff"
   },
-  "bugs": "https://github.com/kenwheeler/mcfly/issues",
+  "bugs": "https://github.com/formidablelabs/biff/issues",
   "license": "BSD",
   "scripts": {
     "test": "jest"
@@ -30,17 +30,18 @@
   "dependencies": {
     "es6-promise": "^2.0.0",
     "flux": "^2.0.1",
-    "invariant": "^1.0.2",
+    "simple-console": "0.0.4",
     "object-assign": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^5.9.1",
     "del": "^0.1.2",
+    "envify": "^3.2.0",
     "gulp": "^3.8.6",
-    "gulp-react": "^0.5.0",
+    "gulp-babel": "^4.0.0",
+    "gulp-jscs-custom": "^0.1.2",
     "gulp-replace": "^0.4.0",
-    "jest-cli": "^0.1.18",
-    "react-tools": "^0.12.0",
+    "jest-cli": "^0.4.0",
     "vinyl-source-stream": "^0.1.1"
   }
 }

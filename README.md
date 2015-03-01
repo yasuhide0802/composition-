@@ -1,36 +1,36 @@
-#McFly
+#Biff
 Flux Architecture Made Easy
 
-*What is McFly?*
+*What is Biff?*
 
 When writing ReactJS apps, it is enormously helpful to use Facebook's Flux architecture. It truly complements ReactJS' unidirectional data flow model. Facebook's Flux library provides a Dispatcher, and some examples of how to write Actions and Stores. However, there are no helpers for Action & Store creation, and Stores require 3rd part eventing.
 
-McFly is a library that provides all 3 components of Flux architecture, using Facebook's Dispatcher, and providing factories for Actions & Stores.
+Biff is a library that provides all 3 components of Flux architecture, using Facebook's Dispatcher, and providing factories for Actions & Stores.
 
 ###Demo
 
-Check out this JSFiddle Demo to see how McFly can work for you:
+Check out this JSFiddle Demo to see how Biff can work for you:
 
 [http://jsfiddle.net/6rauuetb/](http://jsfiddle.net/6rauuetb/)
 
 ###Dispatcher
 
-McFly uses Facebook Flux's dispatcher. When McFly is instantiated, and a single dispatcher instance is created and can be accessed like shown below:
+Biff uses Facebook Flux's dispatcher. When Biff is instantiated, and a single dispatcher instance is created and can be accessed like shown below:
 
 ```javascript
-var mcFly = new McFly();
+var Biff = new Biff();
 
-return mcFly.dispatcher;
+return Biff.dispatcher;
 ```
-In fact, all created Actions & Stores are also stored on the McFly object as `actions` and `stores` respectively.
+In fact, all created Actions & Stores are also stored on the Biff object as `actions` and `stores` respectively.
 
 ###Stores
 
-McFly has a **createStore** helper method that creates an instance of a Store. Store instances have been merged with EventEmitter and come with **emitChange**, **addChangeListener** and **removeChangeListener** methods built in.
+Biff has a **createStore** helper method that creates an instance of a Store. Store instances have been merged with EventEmitter and come with **emitChange**, **addChangeListener** and **removeChangeListener** methods built in.
 
 When a store is created, its methods parameter specified what public methods should be added to the Store object. Every store is automatically registered with the Dispatcher and the `dispatcherID` is stored on the Store object itself, for use in `waitFor` methods.
 
-Creating a store with McFly looks like this:
+Creating a store with Biff looks like this:
 
 ```javascript
 var _todos = [];
@@ -39,7 +39,7 @@ function addTodo(text) {
   _todos.push(text);
 }
 
-var TodoStore = mcFly.createStore({
+var TodoStore = Biff.createStore({
 
 getTodos: function() {
   return _todos;
@@ -65,8 +65,8 @@ getTodos: function() {
 Use `Dispatcher.waitFor` if you need to ensure handlers from other stores run first.
 
 ```javascript
-var mcFly = new McFly();
-var Dispatcher = mcFly.dispatcher;
+var Biff = new Biff();
+var Dispatcher = Biff.dispatcher;
 var OtherStore = require('../stores/OtherStore');
 var _todos = [];
 
@@ -100,14 +100,14 @@ var TodoApp = React.createClass({
 ```
 ###Actions
 
-McFly's **createActions** method creates an Action Creator object with the supplied singleton object. The supplied methods are inserted into a Dispatcher.dispatch call and returned with their original name, so that when you call these methods, the dispatch takes place automatically.
+Biff's **createActions** method creates an Action Creator object with the supplied singleton object. The supplied methods are inserted into a Dispatcher.dispatch call and returned with their original name, so that when you call these methods, the dispatch takes place automatically.
 
 Adding actions to your app looks like this:
 
 ```javascript
-var mcFly = require('../controller/mcFly');
+var Biff = require('../controller/Biff');
 
-var TodoActions = mcFly.createActions({
+var TodoActions = Biff.createActions({
   addTodo: function(text) {
     return {
       actionType: 'ADD_TODO',
@@ -125,12 +125,12 @@ http://jsfiddle.net/thekenwheeler/32hgqsxt/
 
 ## API
 
-###McFly
+###Biff
 
 ```javascript
-var McFly = require('mcfly');
+var Biff = require('Biff');
 
-var mcFly = new McFly();
+var Biff = new Biff();
 ```
 
 ### createStore

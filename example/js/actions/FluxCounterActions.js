@@ -1,6 +1,6 @@
-var mcFly = require('../flux/mcFly');
+var biff = require('../flux/biff');
 
-var FluxCounterActions = mcFly.createActions({
+var FluxCounterActions = biff.createActions({
   countOne: function() {
     return {
       actionType: 'COUNT_ONE'

@@ -1,7 +1,7 @@
 {
   "name": "flux-counter",
   "version": "0.0.1",
-  "description": "McFly counter example",
+  "description": "Biff counter example",
   "main": "js/app.js",
   "dependencies": {
     "flux": "^2.0.0",
@@ -11,7 +11,7 @@
   "devDependencies": {
     "browserify": "~6.2.0",
     "envify": "~3.0.0",
-    "mcfly": "0.0.2",
+    "biff": "0.0.1",
     "react": "^0.12.0",
     "reactify": "^0.15",
     "watchify": "~2.1.0"
