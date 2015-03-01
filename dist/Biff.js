@@ -7,8 +7,6 @@ var _prototypeProperties = function (child, staticProps, instanceProps) { if (st
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var invariant = require("invariant");
-
 /**
  * Action class
  */
@@ -41,7 +39,9 @@ var Action = (function () {
 
       value: function dispatch() {
         var payload = this.callback.apply(this, arguments);
-        invariant(payload.actionType, "Payload object requires an actionType property");
+        if ("production" !== "production" && !payload.actionType) {
+          throw new Error("Invariant Violation: Payload object requires an actionType property");
+        }
         this.dispatcher.dispatch(payload);
       },
       writable: true,
@@ -53,7 +53,7 @@ var Action = (function () {
 })();
 
 module.exports = Action;
-},{"invariant":10}],3:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
@@ -91,7 +91,7 @@ function ActionsFactory(actions, dispatcher) {
 };
 
 module.exports = ActionsFactory;
-},{"./Action":2,"object-assign":11}],4:[function(require,module,exports){
+},{"./Action":2,"object-assign":10}],4:[function(require,module,exports){
 "use strict";
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
@@ -169,7 +169,7 @@ var Biff = (function () {
 })();
 
 module.exports = Biff;
-},{"./ActionsFactory":3,"./Store":5,"flux":7,"object-assign":11}],5:[function(require,module,exports){
+},{"./ActionsFactory":3,"./Store":5,"flux":7,"object-assign":10}],5:[function(require,module,exports){
 "use strict";
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
@@ -178,7 +178,8 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var EventEmitter = require("events").EventEmitter;
 var assign = require("object-assign");
-var iv = require("invariant");
+var SimpleConsole = require("simple-console");
+var con = "production" === "production" ? new SimpleConsole(null) : new SimpleConsole();
 
 /**
  * Store class
@@ -200,16 +201,19 @@ var Store = (function () {
 
     var self = this;
     this.callback = callback;
-    iv(!methods.callback, "\"callback\" is a reserved name and cannot be used as a method name.");
-    iv(!methods.mixin, "\"mixin\" is a reserved name and cannot be used as a method name.");
+    if ("production" !== "production" && methods.callback) {
+      throw new Error("Invariant Violation: \"callback\" is a reserved name and cannot be used as a method name.");
+    }
+    if ("production" !== "production" && methods.mixin) {
+      throw new Error("Invariant Violation: \"mixin\" is a reserved name and cannot be used as a method name.");
+    }
     assign(this, EventEmitter.prototype, methods);
     this.mixin = {
       componentDidMount: function componentDidMount() {
         var _this = this;
 
-        var warn = (console.warn || console.log).bind(console);
         if (!this.storeDidChange) {
-          warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
+          con.warn("A change handler is missing from a component with a Biff mixin. Notifications from Stores are not being handled.");
         }
         this.listener = function () {
           _this.isMounted() && _this.storeDidChange();
@@ -326,7 +330,7 @@ var Store = (function () {
 })();
 
 module.exports = Store;
-},{"events":6,"invariant":10,"object-assign":11}],6:[function(require,module,exports){
+},{"events":6,"object-assign":10,"simple-console":11}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -949,84 +953,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 
 },{}],10:[function(require,module,exports){
-/**
- * BSD License
- *
- * For Flux software
- *
- * Copyright (c) 2014, Facebook, Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- *  * Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- *  * Neither the name Facebook nor the names of its contributors may be used to
- *    endorse or promote products derived from this software without specific
- *    prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
-
-'use strict';
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var invariant = function(condition, format, a, b, c, d, e, f) {
-  // if (process.env.NODE_ENV !== 'production') {
-  //   if (format === undefined) {
-  //     throw new Error('invariant requires an error message argument');
-  //   }
-  // }
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error(
-        'Minified exception occurred; use the non-minified dev environment ' +
-        'for the full error message and additional helpful warnings.'
-      );
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(
-        'Invariant Violation: ' +
-        format.replace(/%s/g, function() { return args[argIndex++]; })
-      );
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-};
-
-module.exports = invariant;
-
-},{}],11:[function(require,module,exports){
 'use strict';
 
 function ToObject(val) {
@@ -1064,6 +990,160 @@ module.exports = Object.assign || function (target, source) {
 
 	return to;
 };
+
+},{}],11:[function(require,module,exports){
+/*!
+ * simple-console
+ * --------------
+ * A small, cross-browser-friendly `console` wrapper.
+ */
+(function (root) {
+  // Memoizations.
+  var _console;
+  var _bind;
+
+  // Patches
+  var EMPTY_OBJ = {};
+  var NOOP = function () {};
+
+  // Console attributes
+  var props = ["memory"];
+  var meths = (
+    "assert,clear,count,debug,dir,dirxml,error,exception,group," +
+    "groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles," +
+    "profileEnd,show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace" +
+    ",warn"
+  ).split(",");
+
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/
+  // Global_Objects/Array/isArray
+  var isArray = Array.isArray || function (arg) {
+    return Object.prototype.toString.call(arg) === "[object Array]";
+  };
+
+  /**
+   * Console abstraction.
+   *
+   * The abstract patches the `target` if passed _and_ the `this` context of
+   * the object.
+   *
+   * @param {Object} target console object to _patch_ or `null` for new object.
+   */
+  var SimpleConsole = function (target) {
+    var con = typeof target !== "undefined" ? target : this._getConsole();
+    var bind = this._getBind();
+    var noConsole = !con;
+    var i;
+
+    // Get targets.
+    // Always patch `this`. Maybe patch `target` if passed.
+    var self = this;
+    target = target || self;
+    con = con || {};
+
+    // Patch properties, methods.
+    for (i = 0; i < props.length; i++) {
+      self[props[i]] = target[props[i]] = con[props[i]] || EMPTY_OBJ;
+    }
+
+    // Enable "apply" and "bind" on methods by converting to real function.
+    // See: http://patik.com/blog/complete-cross-browser-console-log/
+    for (i = 0; i < meths.length; i++) {
+      (function (meth, methFn) {
+        if (noConsole || !methFn) {
+          // No console or method: Noop it.
+          self[meth] = target[meth] = NOOP;
+
+        } else if (isArray(methFn)) {
+          // Straight assign any array objects.
+          // *Note*: Could do `.slice(0);` to clone.
+          //
+          // Fixes Safari on Mac OS X 10.9 on Sauce.
+          // Issue is `console.profiles`, which is an array.
+          // See: https://github.com/FormidableLabs/simple-console/issues/3
+          // See: https://saucelabs.com/tests/9a89e381c91c4e43b25ab8ee16a514e1
+          self[meth] = target[meth] = methFn;
+
+        } else if (bind) {
+          // IE9 and most others: Bind to our create real function.
+          // Should work if `console.FOO` is `function` or `object`.
+          self[meth] = target[meth] = bind.call(methFn, con);
+
+        } else {
+          // IE8: No bind, so even more tortured.
+          self[meth] = target[meth] = function () {
+            Function.prototype.call.call(methFn, con,
+              Array.prototype.slice.call(arguments));
+          };
+        }
+      })(meths[i], con[meths[i]]);
+    }
+  };
+
+  /**
+   * Accessor to console object. (Cached).
+   *
+   * @returns {Object} the console object or `null` if unavailable.
+   * @api private
+   */
+  SimpleConsole.prototype._getConsole = function () {
+    if (typeof _console !== "undefined") { return _console; }
+    _console = window.console || null;
+    return _console;
+  };
+
+  /**
+   * Accessor to bind object. (Cached).
+   *
+   * @returns {Object} the console object or `null` if unavailable.
+   * @api private
+   */
+  SimpleConsole.prototype._getBind = function () {
+    if (typeof _bind !== "undefined") { return _bind; }
+    _bind = Function.prototype.bind || null;
+    return _bind;
+  };
+
+  /**
+   * Patch console object.
+   *
+   * @param {Object}  con console object
+   * @returns {Object}    patched console object
+   * @api private
+   */
+  SimpleConsole.patch = function (con) {
+    con = con || window.console || {};
+
+    // Create simple console object and proxy methods.
+    /*eslint-disable no-new*/
+    new SimpleConsole(con);
+    /*eslint-enable no-new*/
+
+    return con;
+  };
+
+  // UMD wrapper: Borrowed from webpack version.
+  /* istanbul ignore next */
+  function umd() {
+    /*global exports define*/
+    if (typeof exports === "object" && typeof module === "object") {
+      // CommonJS
+      module.exports = SimpleConsole;
+    } else if (typeof define === "function" && define.amd) {
+      // AMD
+      define(function () {
+        return SimpleConsole;
+      });
+    } else {
+      // VanillaJS / Old exports
+      var mod = typeof exports === "object" ? exports : root;
+      mod.SimpleConsole = SimpleConsole;
+    }
+  }
+
+  // Wrap.
+  umd(SimpleConsole);
+})(this);
 
 },{}]},{},[1])(1)
 });
